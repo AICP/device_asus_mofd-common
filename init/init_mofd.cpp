@@ -43,6 +43,11 @@
 #define LOW_CPU "1833000"
 #define HIGH_CPU "2333000"
 
+/*device */
+#define IFWI_FILE "/sys/kernel/fw_update/fw_info/ifwi_version"
+#define IFWI_Z00A "0094.0183"
+#define IFWI_Z008 "0088.0173"
+
 /* Zram */
 #define ZRAM_PROP "ro.config.zram"
 #define MEMINFO_FILE "/proc/meminfo"
@@ -164,13 +169,35 @@ void set_feq_values()
             property_set("ro.sys.perf.device.powersave", "1250000");
             property_set("ro.sys.perf.device.touchboost", "500000");
             property_set("ro.sys.perf.device.full", "1833000");
+            property_set("ro.device.chipset", "Intel® Atom™ Z3560");
+            property_set("ro.device.cpu", "Quad-core 1.8 GHz");
         } else if ( strncmp(buf, HIGH_CPU, strlen(HIGH_CPU)) == 0 ) {
             property_set("ro.sys.perf.device.powersave", "1500000");
             property_set("ro.sys.perf.device.touchboost", "1833000");
             property_set("ro.sys.perf.device.full", "2333000");
+            property_set("ro.device.chipset", "Intel® Atom™ Z3580");
+            property_set("ro.device.cpu", "Quad-core 2.3 GHz");
         } else {
             INFO("%s: Failed to get max cpu speed: %s\n", __func__, buf);
         }
+    }
+}
+
+void set_device_properties()
+{
+    char buf[BUF_SIZE];
+
+    if(read_file2(IFWI_FILE, buf, sizeof(buf))) {
+	if ( strncmp(buf, IFWI_Z00A, strlen(IFWI_Z00A)) == 0 ) {
+            property_set("ro.device.screen_res", "1080x1920");
+        } else if ( strncmp(buf, IFWI_Z008, strlen(IFWI_Z008)) == 0 ) {
+            property_set("ro.device.screen_res", "720x1280");
+        } else {
+            INFO("%s: Failed to determine device type: %s\n", __func__, buf);
+        }
+        property_set("ro.device.gpu", "PowerVR G6430");
+        property_set("ro.device.rear_cam", "13 MP");
+        property_set("ro.device.front_cam", "5 MP");
     }
 }
 
@@ -180,4 +207,5 @@ void vendor_load_properties()
     configure_zram();
     intel_props();
     set_feq_values();
+    set_device_properties();
 }
